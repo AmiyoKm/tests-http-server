@@ -16,7 +16,7 @@ type StubPlayerStore struct {
 	league   []Player
 }
 
-func (s *StubPlayerStore) GetLeague() []Player {
+func (s *StubPlayerStore) GetLeague() League {
 	return s.league
 }
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -67,6 +67,29 @@ func TestGETPlayers(t *testing.T) {
 
 		assertStatus(t, response.Code, http.StatusNotFound)
 	})
+	t.Run("league sorted", func(t *testing.T) {
+	database, cleanDatabase := createTempFile(t, `[
+		{"Name": "Cleo", "Wins": 10},
+		{"Name": "Chris", "Wins": 33}]`)
+	defer cleanDatabase()
+
+	store, err := NewFileSystemPlayerStore(database)
+
+	assertNoError(t, err)
+
+	got := store.GetLeague()
+
+	want := League{
+		{"Chris", 33},
+		{"Cleo", 10},
+	}
+
+	assertLeague(t, got, want)
+
+	// read again
+	got = store.GetLeague()
+	assertLeague(t, got, want)
+})
 }
 func assertStatus(t testing.TB, got, want int) {
 	t.Helper()
@@ -141,8 +164,6 @@ func TestLeague(t *testing.T) {
 		assertContentType(t, response, jsonContentType)
 	})
 }
-
-
 func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want string) {
 	t.Helper()
 	if response.Result().Header.Get("content-type") != want {
@@ -157,7 +178,6 @@ func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
 	if err != nil {
 		t.Fatalf("Unable to parse response from server %q into slice of Player, '%v'", body, err)
 	}
-
 	return
 }
 

@@ -21,7 +21,7 @@ type PlayerServer struct {
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
-	GetLeague() []Player
+	GetLeague() League
 }
 
 func NewPlayerServer(store PlayerStore) *PlayerServer {
@@ -40,7 +40,6 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(p.store.GetLeague())
 }
-
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	player := strings.TrimPrefix(r.URL.Path, "/players/")
@@ -71,7 +70,6 @@ func GetPlayerScore(name string) string {
 	if name == "Pepper" {
 		return "20"
 	}
-
 	if name == "Floyd" {
 		return "10"
 	}
