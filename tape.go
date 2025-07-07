@@ -1,5 +1,4 @@
-// tape.go
-package main
+package poker
 
 import (
 	"io"
